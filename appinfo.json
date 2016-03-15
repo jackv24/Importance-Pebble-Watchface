@@ -1,0 +1,56 @@
+{
+    "appKeys": {},
+    "capabilities": [
+        ""
+    ],
+    "companyName": "Jack Vine",
+    "enableMultiJS": true,
+    "longName": "Importance",
+    "projectType": "native",
+    "resources": {
+        "media": [
+            {
+                "file": "images/icon.png",
+                "menuIcon": true,
+                "name": "IMAGE_ICON",
+                "targetPlatforms": null,
+                "type": "bitmap"
+            },
+            {
+                "file": "images/disconnect_BW.png",
+                "name": "IMAGE_DISCONNECTED_BW",
+                "targetPlatforms": [
+                    "aplite"
+                ],
+                "type": "bitmap"
+            },
+            {
+                "file": "images/disconnect.png",
+                "name": "IMAGE_DISCONNECTED",
+                "targetPlatforms": [
+                    "basalt",
+                    "chalk"
+                ],
+                "type": "bitmap"
+            },
+            {
+                "file": "fonts/naftalene.ttf",
+                "name": "FONT_NAFTALENE_64",
+                "targetPlatforms": null,
+                "type": "font"
+            }
+        ]
+    },
+    "sdkVersion": "3",
+    "shortName": "Importance",
+    "targetPlatforms": [
+        "aplite",
+        "basalt",
+        "chalk"
+    ],
+    "uuid": "775e8b2e-5ee7-4c58-8a07-bdf286485520",
+    "versionLabel": "1.1",
+    "watchapp": {
+        "watchface": true
+    }
+}
