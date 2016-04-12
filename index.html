@@ -2,10 +2,15 @@
 <html>
 	<head>
 		<title>Importance Configuration</title>
-		<link rel='stylesheet' type='text/css' href='css/slate.min.css'>		
+		<link rel="stylesheet" type="text/css" href="css/slate.min.css">		
 	</head>
 	<body>
-	<!--
+    	<div class="item-container">
+        	<h1 style="text-align: center; padding: 10px 0;">Importance Settings</h1>
+    		<div class="item-container-footer">
+				Please note that changing some of these settings could drastically impact battery life.
+			</div>
+        </div>
 		<div class="item-container">
 			<div class="item-container-header">Time</div>
 			<div class="item-container-content">
@@ -13,12 +18,18 @@
 					Display Seconds
 					<input type="checkbox" class="item-toggle" id="seconds_toggle">
 				</label>
+             </div>
+         </div>
+         <!--<div class="item-container">
+             <div class="item-container-header">Bluetooth Indicator</div>
+             <div class="item-container-content">
+                <div class="item tab-buttons">
+                	<a class="tab-button active">Icon / Vibrate</a>
+                    <a class="tab-button">Icon Only</a>
+                    <a class="tab-button">Disabled</a>
+                </div>
 			</div>
-			<div class="item-container-footer">
-				Please note that changing some of these settings could drastically impact battery life.
-			</div>
-		</div>
-		-->
+		</div>-->
 		<div class="item-container">
 			<div class="item-container-header">Time, Date, and Background</div>
 			<div class="item-container-content">
@@ -57,7 +68,7 @@
 			</div>
 		</div>
 		
-		<script src='js/slate.min.js'></script>
+		<script src="js/slate.min.js"></script>
 		<script>
 		(function() {
 			loadOptions();
@@ -76,6 +87,8 @@
 		}
 		
 		function loadOptions() {
+			var $secondsToggle = $('#seconds_toggle');
+			
 			var $batteryBackgroundColorPicker = $('#battery_bg_color');
 			var $batteryForegroundColorPicker = $('#battery_fg_color');
 			
@@ -84,6 +97,8 @@
 			var $backgroundColorPicker = $('#bg_color');
 			
 			if(localStorage.batteryBackgroundColor) {
+				$secondsToggle[0].checked = localStorage.secondsToggle === 'true';
+				
 				$batteryBackgroundColorPicker[0].value = localStorage.batteryBackgroundColor;
 				$batteryForegroundColorPicker[0].value = localStorage.batteryForegroundColor;
 				
@@ -94,6 +109,8 @@
 		}
 		
 		function getAndStoreConfigData() {
+			var $secondsToggleSwitch = $('#seconds_toggle');
+			
 			var $batteryBackgroundColorPicker = $('#battery_bg_color');
 			var $batteryForegroundColorPicker = $('#battery_fg_color');
 			
@@ -102,6 +119,8 @@
 			var $backgroundColorPicker = $('#bg_color');
 			
 			var options = {
+				secondsToggle: $secondsToggleSwitch[0].checked,
+				
 				batteryBackgroundColor: $batteryBackgroundColorPicker.val(),
 				batteryForegroundColor: $batteryForegroundColorPicker.val(),
 				
@@ -109,6 +128,8 @@
 				dateColor: $dateColorPicker.val(),
 				backgroundColor: $backgroundColorPicker.val()
 			};
+			
+			localStorage.secondsToggle = options.secondsToggle;
 			
 			localStorage.batteryBackgroundColor = options.batteryBackgroundColor;
 			localStorage.batteryForegroundColor = options.batteryForegroundColor;
