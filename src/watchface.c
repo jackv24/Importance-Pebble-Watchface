@@ -4,15 +4,16 @@
 //COnfig key values
 #define KEY_BATTERY_BACKGROUND_COLOR 0
 #define KEY_BATTERY_FOREGROUND_COLOR 1
-
 #define KEY_TIME_COLOR 2
 #define KEY_DATE_COLOR 3
 #define KEY_BACKGROUND_COLOR 4
+#define KEY_SECONDS_TOGGLE 5
 
 static Window *s_window;
 static GFont s_res_font_naftalene_64;
 static GFont s_res_roboto_condensed_21;
 static TextLayer *s_time_layer;
+static TextLayer *s_seconds_layer;
 static TextLayer *s_date_layer;
 static Layer *s_battery_layer;
 
@@ -21,6 +22,7 @@ static GColor b_fg_color;
 static GColor bg_color;
 static GColor time_color;
 static GColor date_color;
+static bool seconds_active = false;
 
 static BitmapLayer *s_connection_layer;
 static GBitmap *s_connection_bitmap;
@@ -32,11 +34,12 @@ static void initialise_ui(void) {
       window_set_fullscreen(s_window, true);
   #endif
   
-   int offset = PBL_IF_RECT_ELSE(0, 18);
+  int offset = PBL_IF_RECT_ELSE(0, 18);
    
   s_res_font_naftalene_64 = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_NAFTALENE_64));
   s_res_roboto_condensed_21 = fonts_get_system_font(FONT_KEY_ROBOTO_CONDENSED_21);
-  // s_time_layer
+  
+   // s_time_layer
   s_time_layer = text_layer_create(GRect(0 + offset, 40, 144, 64));
   text_layer_set_background_color(s_time_layer, GColorClear);
   text_layer_set_text_color(s_time_layer, time_color);
@@ -45,6 +48,18 @@ static void initialise_ui(void) {
   text_layer_set_font(s_time_layer, s_res_font_naftalene_64);
   layer_add_child(window_get_root_layer(s_window), (Layer *)s_time_layer);
   
+   // s_seconds_layer
+   s_seconds_layer = text_layer_create(GRect(0 + offset, 130, 144, 64));
+   text_layer_set_background_color(s_seconds_layer, GColorClear);
+   text_layer_set_text(s_seconds_layer, "");
+   text_layer_set_text_alignment(s_seconds_layer, GTextAlignmentCenter);
+   text_layer_set_font(s_seconds_layer, s_res_roboto_condensed_21);
+   if(seconds_active)
+      text_layer_set_text_color(s_seconds_layer, time_color);
+   else
+      text_layer_set_text_color(s_seconds_layer, GColorClear);
+   layer_add_child(window_get_root_layer(s_window), (Layer *)s_seconds_layer);
+   
   // s_date_layer
   s_date_layer = text_layer_create(GRect(0 + offset, 25, 144, 49));
   text_layer_set_background_color(s_date_layer, GColorClear);
@@ -100,6 +115,47 @@ static void battery_update_proc(Layer *layer, GContext *ctx) {
    graphics_fill_rect(ctx, GRect(0, 0, width, bounds.size.h), 0, GCornerNone);
 }
 
+static void battery_callback(BatteryChargeState state) {
+   s_battery_level = state.charge_percent;
+   s_isBatteryCharging = state.is_charging;
+   
+   layer_mark_dirty(s_battery_layer);
+}
+
+static void bluetooth_callback(bool connected) {
+   layer_set_hidden(bitmap_layer_get_layer(s_connection_layer), connected);
+   
+   if(!connected) {
+      vibes_double_pulse();
+   }
+}
+
+static void update_time() {
+   time_t temp = time(NULL);
+   struct tm *tick_time = localtime(&temp);
+   
+   static char s_buffer[8];
+   strftime(s_buffer, sizeof(s_buffer), clock_is_24h_style() ? "%H:%M" : "%I:%M", tick_time);
+   
+   text_layer_set_text(s_time_layer, s_buffer);
+   
+   static char date_buffer[16];
+   strftime(date_buffer, sizeof(date_buffer), "%a %d %b", tick_time);
+   
+   text_layer_set_text(s_date_layer, date_buffer);
+   
+   if(seconds_active) {
+      static char s_s_buffer[8];
+      strftime(s_s_buffer, sizeof(s_s_buffer), "%S", tick_time);
+      
+      text_layer_set_text(s_seconds_layer, s_s_buffer);
+   }
+}
+
+static void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
+   update_time();
+}
+
 static void inbox_received_handler(DictionaryIterator *iter, void *context) {
    Tuple *b_bg_color_t = dict_find(iter, KEY_BATTERY_BACKGROUND_COLOR);
    if(b_bg_color_t) {
@@ -150,44 +206,30 @@ static void inbox_received_handler(DictionaryIterator *iter, void *context) {
       date_color = GColorFromHEX(color);
    }
    
+   //seconds
+   Tuple *seconds_t = dict_find(iter, KEY_SECONDS_TOGGLE);
+   if(seconds_t && seconds_t->value->int8 > 0) {
+      seconds_active = true;
+      
+      persist_write_bool(KEY_SECONDS_TOGGLE, true);
+   } else {
+      persist_write_bool(KEY_SECONDS_TOGGLE, false);
+   }
+
    //refresh ui
    window_set_background_color(s_window, bg_color);
    text_layer_set_text_color(s_time_layer, time_color);
    text_layer_set_text_color(s_date_layer, date_color);
-}
-
-static void battery_callback(BatteryChargeState state) {
-   s_battery_level = state.charge_percent;
-   s_isBatteryCharging = state.is_charging;
    
-   layer_mark_dirty(s_battery_layer);
-}
-
-static void bluetooth_callback(bool connected) {
-   layer_set_hidden(bitmap_layer_get_layer(s_connection_layer), connected);
-   
-   if(!connected) {
-      vibes_double_pulse();
+   if(seconds_active) {
+      tick_timer_service_subscribe(SECOND_UNIT, tick_handler);
+      text_layer_set_text_color(s_seconds_layer, time_color);
+   } else {
+      tick_timer_service_subscribe(MINUTE_UNIT, tick_handler);
+      text_layer_set_text(s_seconds_layer, "");
+      text_layer_set_text_color(s_seconds_layer, GColorClear);
    }
-}
-
-static void update_time() {
-   time_t temp = time(NULL);
-   struct tm *tick_time = localtime(&temp);
-   
-   static char s_buffer[8];
-   strftime(s_buffer, sizeof(s_buffer), clock_is_24h_style() ? "%H:%M" : "%I:%M", tick_time);
-   
-   text_layer_set_text(s_time_layer, s_buffer);
-   
-   static char date_buffer[16];
-   strftime(date_buffer, sizeof(date_buffer), "%a %d %b", tick_time);
-   
-   text_layer_set_text(s_date_layer, date_buffer);
-}
-
-static void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
-   update_time();
+     
 }
 
 static void handle_window_unload(Window* window) {
@@ -201,6 +243,8 @@ void show_watchface(void) {
       time_color = GColorFromHEX(persist_read_int(KEY_TIME_COLOR));
    if(persist_exists(KEY_DATE_COLOR))
       date_color = GColorFromHEX(persist_read_int(KEY_DATE_COLOR));
+   if(persist_exists(KEY_SECONDS_TOGGLE))
+      seconds_active = persist_read_bool(KEY_SECONDS_TOGGLE);
    
    initialise_ui();
   window_set_window_handlers(s_window, (WindowHandlers) {
@@ -214,7 +258,11 @@ void show_watchface(void) {
    layer_set_update_proc(s_battery_layer, battery_update_proc);
    battery_callback(battery_state_service_peek());
    
-   tick_timer_service_subscribe(MINUTE_UNIT, tick_handler);
+   if(seconds_active)
+      tick_timer_service_subscribe(SECOND_UNIT, tick_handler);
+   else
+      tick_timer_service_subscribe(MINUTE_UNIT, tick_handler);
+   
    battery_state_service_subscribe(battery_callback);
    
    connection_service_subscribe((ConnectionHandlers) {

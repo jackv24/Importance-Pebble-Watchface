@@ -11,6 +11,8 @@ Pebble.addEventListener('webviewclosed', function(e) {
    
    if(configData.batteryBackgroundColor) {
       Pebble.sendAppMessage({
+         secondsToggle: configData.secondsToggle ? 1 : 0,
+         
          batteryBackgroundColor: parseInt(configData.batteryBackgroundColor, 16),
          batteryForegroundColor: parseInt(configData.batteryForegroundColor, 16),
          

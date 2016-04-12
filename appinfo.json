@@ -4,6 +4,7 @@
         "batteryBackgroundColor": 0,
         "batteryForegroundColor": 1,
         "dateColor": 3,
+        "secondsToggle": 5,
         "timeColor": 2
     },
     "capabilities": [
