@@ -18,14 +18,14 @@
 			</div>
 		</div>
 		<div class="item-container">
-			<div class="item-container-header">Appearance</div>
+			<div class="item-container-header">Battery Bar</div>
 			<div class="item-container-content">
 				<label class="item">
-					Color 1
+					Foreground Color
 					<input type="text" class="item-color item-color-normal" id="battery_fg_color" value="#00AAFF">
 				</label>
 				<label class="item">
-					Color 2
+					Background Color
 					<input type="text" class="item-color item-color-normal" id="battery_bg_color" value="#0000AA">
 				</label>
 			</div>
@@ -38,35 +38,60 @@
 		
 		<script src='js/slate.min.js'></script>
 		<script>
-		var submitButton = document.getElementById('submit-button');
+		(function() {
+			loadOptions();
+			submitHandler();
+		})();
 		
-		submitButton.addEventListener('click', function() {
-			console.log('Submit clicked');
+		function submitHandler() {
+			var $submitButton = $('#submit-button');
+			
+			$submitButton.on('click', function() {
+				console.log('Submit clicked');
+				
+				var return_to = getQueryParam('return_to', 'pebblejs://close#');
+				document.location = return_to + encodeURIComponent(JSON.stringify(getAndStoreConfigData()));
+			});
+		}
 		
-			var batteryBackgroundColor = document.getElementById('battery_bg_color');
-			var batteryForegroundColor = document.getElementById('battery_fg_color');
+		function loadOptions() {
+			var $batteryBackgroundColorPicker = $('#battery_bg_color');
+			var $batteryForegroundColorPicker = $('#battery_fg_color');
+			
+			if(localStorage.batteryBackgroundColor) {
+				$batteryBackgroundColorPicker[0].value = localStorage.batteryBackgroundColor;
+				$batteryForegroundColorPicker[0].value = localStorage.batteryForegroundColor;
+			}
+		}
+		
+		function getAndStoreConfigData() {
+			var $batteryBackgroundColorPicker = $('#battery_bg_color');
+			var $batteryForegroundColorPicker = $('#battery_fg_color');
 			
 			var options = {
-				'battery_background_color': parseInt(batteryBackgroundColor.value, 16),
-				'battery_foreground_color': parseInt(batteryForegroundColor.value, 16)
+				batteryBackgroundColor: $batteryBackgroundColorPicker.val(),
+				batteryForegroundColor: $batteryForegroundColorPicker.val()
 			};
 			
-			function getQueryParam(variable, defaultValue) {
-			  var query = location.search.substring(1);
-			  var vars = query.split('&');
-			  for (var i = 0; i < vars.length; i++) {
-				var pair = vars[i].split('=');
-				if (pair[0] == variable) {
-				  return decodeURIComponent(pair[1]);
-				}
-			  }
-			  return defaultValue || false;
+			localStorage.batteryBackgroundColor = options.batteryBackgroundColor;
+			localStorage.batteryForegroundColor = options.batteryForegroundColor;
+			
+			console.log('Got options: ' + JSON.stringify(options));
+			
+			return options;
+		}
+		
+		function getQueryParam(variable, defaultValue) {
+		  var query = location.search.substring(1);
+		  var vars = query.split('&');
+		  for (var i = 0; i < vars.length; i++) {
+			var pair = vars[i].split('=');
+			if (pair[0] === variable) {
+			  return decodeURIComponent(pair[1]);
 			}
-			var return_to = getQueryParam('return_to', 'pebblejs://close#');
-
-			// Encode and send the data when the page closes
-			document.location = return_to + encodeURIComponent(JSON.stringify(options));
-		});
+		  }
+		  return defaultValue || false;
+		}
 	</script>
 	</body>
 </html>
