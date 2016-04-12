@@ -41,6 +41,8 @@
 		var submitButton = document.getElementById('submit-button');
 		
 		submitButton.addEventListener('click', function() {
+			console.log('Submit clicked');
+		
 			var batteryBackgroundColor = document.getElementById('battery_bg_color');
 			var batteryForegroundColor = document.getElementById('battery_fg_color');
 			
@@ -54,7 +56,7 @@
 			  var vars = query.split('&');
 			  for (var i = 0; i < vars.length; i++) {
 				var pair = vars[i].split('=');
-				if (pair[0] === variable) {
+				if (pair[0] == variable) {
 				  return decodeURIComponent(pair[1]);
 				}
 			  }
