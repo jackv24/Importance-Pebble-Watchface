@@ -1,7 +1,10 @@
 {
-    "appKeys": {},
+    "appKeys": {
+        "batteryBackgroundColor": 0,
+        "batteryForegroundColor": 1
+    },
     "capabilities": [
-        ""
+        "configurable"
     ],
     "companyName": "Jack Vine",
     "enableMultiJS": true,

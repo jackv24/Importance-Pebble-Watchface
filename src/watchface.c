@@ -1,12 +1,19 @@
 #include <pebble.h>
 #include "watchface.h"
 
+//COnfig key values
+#define KEY_BATTERY_BACKGROUND_COLOR 0
+#define KEY_BATTERY_FOREGROUND_COLOR 1
+
 static Window *s_window;
 static GFont s_res_font_naftalene_64;
 static GFont s_res_roboto_condensed_21;
 static TextLayer *s_time_layer;
 static TextLayer *s_date_layer;
 static Layer *s_battery_layer;
+
+static GColor b_bg_color;
+static GColor b_fg_color;
 
 static BitmapLayer *s_connection_layer;
 static GBitmap *s_connection_bitmap;
@@ -15,7 +22,7 @@ static void initialise_ui(void) {
   s_window = window_create();
   window_set_background_color(s_window, GColorBlack);
   #ifndef PBL_SDK_3
-    window_set_fullscreen(s_window, true);
+      window_set_fullscreen(s_window, true);
   #endif
   
    int offset = PBL_IF_RECT_ELSE(0, 18);
@@ -71,7 +78,7 @@ static void battery_update_proc(Layer *layer, GContext *ctx) {
    
    int width = (int)(float)(((float)s_battery_level / 100.0F) * 114.0F);
    
-   graphics_context_set_fill_color(ctx, PBL_IF_COLOR_ELSE(GColorDukeBlue, GColorBlack));
+   graphics_context_set_fill_color(ctx, PBL_IF_COLOR_ELSE(b_bg_color, GColorBlack));
    graphics_fill_rect(ctx, bounds, 0, GCornerNone);
    
    if(s_isBatteryCharging) {
@@ -80,10 +87,33 @@ static void battery_update_proc(Layer *layer, GContext *ctx) {
       width = 114.0F;
    }
    else {
-      graphics_context_set_fill_color(ctx, PBL_IF_COLOR_ELSE(GColorVividCerulean, GColorWhite));
+      graphics_context_set_fill_color(ctx, PBL_IF_COLOR_ELSE(b_fg_color, GColorWhite));
    }
    
    graphics_fill_rect(ctx, GRect(0, 0, width, bounds.size.h), 0, GCornerNone);
+}
+
+static void inbox_received_handler(DictionaryIterator *iter, void *context) {
+   Tuple *b_bg_color_t = dict_find(iter, KEY_BATTERY_BACKGROUND_COLOR);
+   if(b_bg_color_t) {
+      int bg_color = b_bg_color_t->value->int32;
+      
+      persist_write_int(KEY_BATTERY_BACKGROUND_COLOR, bg_color);
+      
+      b_bg_color = GColorFromHEX(bg_color);
+   }
+   
+   Tuple *b_fg_color_t = dict_find(iter, KEY_BATTERY_FOREGROUND_COLOR);
+   if(b_fg_color_t) {
+      int fg_color = b_fg_color_t->value->int32;
+      
+      persist_write_int(KEY_BATTERY_FOREGROUND_COLOR, fg_color);
+      
+      b_fg_color = GColorFromHEX(fg_color);
+   }
+   
+    //reload config
+   layer_mark_dirty(s_battery_layer);
 }
 
 static void battery_callback(BatteryChargeState state) {
@@ -143,6 +173,17 @@ void show_watchface(void) {
    connection_service_subscribe((ConnectionHandlers) {
       .pebble_app_connection_handler = bluetooth_callback
    });
+   
+   if(persist_exists(KEY_BATTERY_BACKGROUND_COLOR))
+      b_bg_color = GColorFromHEX(persist_read_int(KEY_BATTERY_BACKGROUND_COLOR));
+   
+   if(persist_exists(KEY_BATTERY_FOREGROUND_COLOR))
+      b_fg_color = GColorFromHEX(persist_read_int(KEY_BATTERY_FOREGROUND_COLOR));
+   
+   layer_mark_dirty(s_battery_layer);
+   
+   app_message_register_inbox_received(inbox_received_handler);
+   app_message_open(app_message_inbox_size_maximum(), app_message_outbox_size_maximum());
 }
 
 void hide_watchface(void) {
