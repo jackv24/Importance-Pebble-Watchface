@@ -1,7 +1,10 @@
 {
     "appKeys": {
+        "backgroundColor": 4,
         "batteryBackgroundColor": 0,
-        "batteryForegroundColor": 1
+        "batteryForegroundColor": 1,
+        "dateColor": 3,
+        "timeColor": 2
     },
     "capabilities": [
         "configurable"
@@ -52,7 +55,7 @@
         "chalk"
     ],
     "uuid": "775e8b2e-5ee7-4c58-8a07-bdf286485520",
-    "versionLabel": "1.1",
+    "versionLabel": "1.3",
     "watchapp": {
         "watchface": true
     }

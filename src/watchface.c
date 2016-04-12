@@ -5,6 +5,10 @@
 #define KEY_BATTERY_BACKGROUND_COLOR 0
 #define KEY_BATTERY_FOREGROUND_COLOR 1
 
+#define KEY_TIME_COLOR 2
+#define KEY_DATE_COLOR 3
+#define KEY_BACKGROUND_COLOR 4
+
 static Window *s_window;
 static GFont s_res_font_naftalene_64;
 static GFont s_res_roboto_condensed_21;
@@ -14,13 +18,16 @@ static Layer *s_battery_layer;
 
 static GColor b_bg_color;
 static GColor b_fg_color;
+static GColor bg_color;
+static GColor time_color;
+static GColor date_color;
 
 static BitmapLayer *s_connection_layer;
 static GBitmap *s_connection_bitmap;
 
 static void initialise_ui(void) {
   s_window = window_create();
-  window_set_background_color(s_window, GColorBlack);
+  window_set_background_color(s_window, bg_color);
   #ifndef PBL_SDK_3
       window_set_fullscreen(s_window, true);
   #endif
@@ -32,7 +39,7 @@ static void initialise_ui(void) {
   // s_time_layer
   s_time_layer = text_layer_create(GRect(0 + offset, 40, 144, 64));
   text_layer_set_background_color(s_time_layer, GColorClear);
-  text_layer_set_text_color(s_time_layer, GColorWhite);
+  text_layer_set_text_color(s_time_layer, time_color);
   text_layer_set_text(s_time_layer, "04:33");
   text_layer_set_text_alignment(s_time_layer, GTextAlignmentCenter);
   text_layer_set_font(s_time_layer, s_res_font_naftalene_64);
@@ -41,7 +48,7 @@ static void initialise_ui(void) {
   // s_date_layer
   s_date_layer = text_layer_create(GRect(0 + offset, 25, 144, 49));
   text_layer_set_background_color(s_date_layer, GColorClear);
-  text_layer_set_text_color(s_date_layer, GColorWhite);
+  text_layer_set_text_color(s_date_layer, date_color);
   text_layer_set_text(s_date_layer, "24/2");
   text_layer_set_text_alignment(s_date_layer, GTextAlignmentCenter);
   text_layer_set_font(s_date_layer, s_res_roboto_condensed_21);
@@ -114,6 +121,39 @@ static void inbox_received_handler(DictionaryIterator *iter, void *context) {
    
     //reload config
    layer_mark_dirty(s_battery_layer);
+   
+   //background, time and date
+   Tuple *bg_color_t = dict_find(iter, KEY_BACKGROUND_COLOR);
+   if(bg_color_t) {
+      int color = bg_color_t->value->int32;
+      
+      persist_write_int(KEY_BACKGROUND_COLOR, color);
+      
+      bg_color = GColorFromHEX(color);
+   }
+   
+   Tuple *time_color_t = dict_find(iter, KEY_TIME_COLOR);
+   if(time_color_t) {
+      int color = time_color_t->value->int32;
+      
+      persist_write_int(KEY_TIME_COLOR, color);
+      
+      time_color = GColorFromHEX(color);
+   }
+   
+   Tuple *date_color_t = dict_find(iter, KEY_DATE_COLOR);
+   if(date_color_t) {
+      int color = date_color_t->value->int32;
+      
+      persist_write_int(KEY_DATE_COLOR, color);
+      
+      date_color = GColorFromHEX(color);
+   }
+   
+   //refresh ui
+   window_set_background_color(s_window, bg_color);
+   text_layer_set_text_color(s_time_layer, time_color);
+   text_layer_set_text_color(s_date_layer, date_color);
 }
 
 static void battery_callback(BatteryChargeState state) {
@@ -155,7 +195,14 @@ static void handle_window_unload(Window* window) {
 }
 
 void show_watchface(void) {
-  initialise_ui();
+   if(persist_exists(KEY_BACKGROUND_COLOR))
+      bg_color = GColorFromHEX(persist_read_int(KEY_BACKGROUND_COLOR));
+   if(persist_exists(KEY_TIME_COLOR))
+      time_color = GColorFromHEX(persist_read_int(KEY_TIME_COLOR));
+   if(persist_exists(KEY_DATE_COLOR))
+      date_color = GColorFromHEX(persist_read_int(KEY_DATE_COLOR));
+   
+   initialise_ui();
   window_set_window_handlers(s_window, (WindowHandlers) {
     .unload = handle_window_unload,
   });
@@ -174,13 +221,12 @@ void show_watchface(void) {
       .pebble_app_connection_handler = bluetooth_callback
    });
    
+   layer_mark_dirty(s_battery_layer);
+   
    if(persist_exists(KEY_BATTERY_BACKGROUND_COLOR))
       b_bg_color = GColorFromHEX(persist_read_int(KEY_BATTERY_BACKGROUND_COLOR));
-   
    if(persist_exists(KEY_BATTERY_FOREGROUND_COLOR))
       b_fg_color = GColorFromHEX(persist_read_int(KEY_BATTERY_FOREGROUND_COLOR));
-   
-   layer_mark_dirty(s_battery_layer);
    
    app_message_register_inbox_received(inbox_received_handler);
    app_message_open(app_message_inbox_size_maximum(), app_message_outbox_size_maximum());

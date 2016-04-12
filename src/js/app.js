@@ -12,7 +12,11 @@ Pebble.addEventListener('webviewclosed', function(e) {
    if(configData.batteryBackgroundColor) {
       Pebble.sendAppMessage({
          batteryBackgroundColor: parseInt(configData.batteryBackgroundColor, 16),
-         batteryForegroundColor: parseInt(configData.batteryForegroundColor, 16)
+         batteryForegroundColor: parseInt(configData.batteryForegroundColor, 16),
+         
+         timeColor: parseInt(configData.timeColor, 16),
+         dateColor: parseInt(configData.dateColor, 16),
+         backgroundColor: parseInt(configData.backgroundColor, 16)
       }, function() {
          console.log('Send successful!');
       }, function() {
