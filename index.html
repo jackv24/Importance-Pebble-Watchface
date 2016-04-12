@@ -20,18 +20,37 @@
 		</div>
 		-->
 		<div class="item-container">
+			<div class="item-container-header">Time, Date, and Background</div>
+			<div class="item-container-content">
+				<label class="item">
+					Time Colour
+					<input type="text" class="item-color item-color-normal" id="time_color" value="#FFFFFF">
+				</label>
+				<label class="item">
+					Date Colour
+					<input type="text" class="item-color item-color-normal" id="date_color" value="#FFFFFF">
+				</label>
+				<label class="item">
+					Background Colour
+					<input type="text" class="item-color item-color-normal" id="bg_color" value="#000000">
+				</label>
+			</div>
+		</div>
+		
+		<div class="item-container">
 			<div class="item-container-header">Battery Bar</div>
 			<div class="item-container-content">
 				<label class="item">
-					Foreground Color
+					Foreground Colour
 					<input type="text" class="item-color item-color-normal" id="battery_fg_color" value="#00AAFF">
 				</label>
 				<label class="item">
-					Background Color
+					Background Colour
 					<input type="text" class="item-color item-color-normal" id="battery_bg_color" value="#0000AA">
 				</label>
 			</div>
 		</div>
+		
 		<div class="item-container">
 			<div class="button-container">
 				<input type="button" class="item-button" value="SUBMIT" id="submit-button">
@@ -60,9 +79,17 @@
 			var $batteryBackgroundColorPicker = $('#battery_bg_color');
 			var $batteryForegroundColorPicker = $('#battery_fg_color');
 			
+			var $timeColorPicker = $('#time_color');
+			var $dateColorPicker = $('#date_color');
+			var $backgroundColorPicker = $('#bg_color');
+			
 			if(localStorage.batteryBackgroundColor) {
 				$batteryBackgroundColorPicker[0].value = localStorage.batteryBackgroundColor;
 				$batteryForegroundColorPicker[0].value = localStorage.batteryForegroundColor;
+				
+				$timeColorPicker[0].value = localStorage.timeColor;
+				$dateColorPicker[0].value = localStorage.dateColor;
+				$backgroundColorPicker[0].value = localStorage.backgroundColor;
 			}
 		}
 		
@@ -70,13 +97,25 @@
 			var $batteryBackgroundColorPicker = $('#battery_bg_color');
 			var $batteryForegroundColorPicker = $('#battery_fg_color');
 			
+			var $timeColorPicker = $('#time_color');
+			var $dateColorPicker = $('#date_color');
+			var $backgroundColorPicker = $('#bg_color');
+			
 			var options = {
 				batteryBackgroundColor: $batteryBackgroundColorPicker.val(),
 				batteryForegroundColor: $batteryForegroundColorPicker.val()
+				
+				timeColor: $timeColorPicker.val();
+				dateColor: $dateColorPicker.val();
+				backgroundColor: $backgroundColorPicker.val();
 			};
 			
 			localStorage.batteryBackgroundColor = options.batteryBackgroundColor;
 			localStorage.batteryForegroundColor = options.batteryForegroundColor;
+			
+			localStorage.timeColor = options.timeColor;
+			localStorage.dateColor = options.dateColor;
+			localStorage.backgroundColor = options.backgroundColor;
 			
 			console.log('Got options: ' + JSON.stringify(options));
 			
@@ -96,4 +135,4 @@
 		}
 	</script>
 	</body>
-</html>
+</html>>
